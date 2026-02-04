@@ -35,7 +35,7 @@
 #define kKeyboardEnter @"\x1b ENTER \x1b"
 #define kKeyboardDelete @"\x1b DELETE \x1b"
 
-@interface WebOSTVService () <UIAlertViewDelegate, WebOSTVServiceSocketClientDelegate, RemoteCameraServiceDelegate, ScreenMirroringServiceDelegate>
+@interface WebOSTVService () <WebOSTVServiceSocketClientDelegate, RemoteCameraServiceDelegate, ScreenMirroringServiceDelegate>
 {
     NSArray *_permissions;
 
@@ -43,13 +43,11 @@
     NSMutableDictionary *_appToAppIdMappings;
 
     NSTimer *_pairingTimer;
-    UIAlertView *_pairingAlert;
 
     NSMutableArray *_keyboardQueue;
     BOOL _keyboardQueueProcessing;
 
     BOOL _mouseInit;
-    UIAlertView *_pinAlertView;
     
     __weak id<RemoteCameraControlDelegate> _remoteCameraDelegate;
     __weak id<ScreenMirroringControlDelegate> _screenMirroringDelegate;
@@ -328,49 +326,22 @@
 
 #pragma mark - Paring alert
 
+// UIAlertView methods disabled - deprecated and crashes on UIScene-based apps
+// Use custom delegate (deviceService:pairingFailedWithError:, deviceServicePairingSuccess:) instead
+
 -(void) showAlert
 {
-    NSString *title = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_Title" value:@"Pairing with device" table:@"ConnectSDK"];
-    NSString *message = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_Request" value:@"Please confirm the connection on your device" table:@"ConnectSDK"];
-    NSString *ok = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_OK" value:@"OK" table:@"ConnectSDK"];
-    NSString *cancel = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_Cancel" value:@"Cancel" table:@"ConnectSDK"];
-    
-    _pairingAlert = [[UIAlertView alloc] initWithTitle:title message:message delegate:self cancelButtonTitle:cancel otherButtonTitles:ok, nil];
-    if(self.pairingType == DeviceServicePairingTypePinCode || self.pairingType == DeviceServicePairingTypeMixed){
-        _pairingAlert.alertViewStyle = UIAlertViewStylePlainTextInput;
-        _pairingAlert.message = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_Request_Pin" value:@"Please enter the pin code" table:@"ConnectSDK"];
-    }
-    dispatch_on_main(^{ [_pairingAlert show]; });
-}
-
--(void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
-{
-    if(alertView == _pairingAlert){
-        if (buttonIndex == 0){
-            [self disconnect];
-        }else
-            if((self.pairingType == DeviceServicePairingTypePinCode || self.pairingType == DeviceServicePairingTypeMixed) && buttonIndex == 1){
-                NSString *pairingCode = [alertView textFieldAtIndex:0].text;
-                [self sendPairingKey:pairingCode success:nil failure:nil];
-            }
-    }
+    // Disabled: UIAlertView is deprecated and unavailable for UIScene based applications
 }
 
 -(void) showAlertWithTitle:(NSString *)title andMessage:(NSString *)message
 {
-    NSString *alertTitle = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_Title" value:title table:@"ConnectSDK"];
-    NSString *alertMessage = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_Request" value:message table:@"ConnectSDK"];
-    NSString *ok = [[NSBundle mainBundle] localizedStringForKey:@"Connect_SDK_Pair_OK" value:@"OK" table:@"ConnectSDK"];
-    if(!_pinAlertView){
-        _pinAlertView = [[UIAlertView alloc] initWithTitle:alertTitle message:alertMessage delegate:self cancelButtonTitle:nil otherButtonTitles:ok, nil];
-    }
-    dispatch_on_main(^{ [_pinAlertView show]; });
+    // Disabled: UIAlertView is deprecated and unavailable for UIScene based applications
 }
 
--(void)dismissPinAlertView{
-    if (_pinAlertView && _pinAlertView.isVisible){
-        [_pinAlertView dismissWithClickedButtonIndex:0 animated:NO];
-    }
+-(void)dismissPinAlertView
+{
+    // Disabled: UIAlertView is deprecated and unavailable for UIScene based applications
 }
 
 #pragma mark - WebOSTVServiceSocketClientDelegate
@@ -382,9 +353,6 @@
 
 - (void) socket:(WebOSTVServiceSocketClient *)socket registrationFailed:(NSError *)error
 {
-    if (_pairingAlert && _pairingAlert.isVisible)
-        dispatch_on_main(^{ [_pairingAlert dismissWithClickedButtonIndex:0 animated:NO]; });
-
     if (self.delegate && [self.delegate respondsToSelector:@selector(deviceService:pairingFailedWithError:)])
         dispatch_on_main(^{ [self.delegate deviceService:self pairingFailedWithError:error]; });
 
@@ -395,9 +363,6 @@
 {
     [_pairingTimer invalidate];
 
-    if (_pairingAlert && _pairingAlert.visible)
-        dispatch_on_main(^{ [_pairingAlert dismissWithClickedButtonIndex:1 animated:YES]; });
-
     if ([self.delegate respondsToSelector:@selector(deviceServicePairingSuccess:)])
         dispatch_on_main(^{ [self.delegate deviceServicePairingSuccess:self]; });
 
@@ -407,9 +372,6 @@
 
 - (void) socket:(WebOSTVServiceSocketClient *)socket didFailWithError:(NSError *)error
 {
-    if (_pairingAlert && _pairingAlert.visible)
-        dispatch_on_main(^{ [_pairingAlert dismissWithClickedButtonIndex:0 animated:YES]; });
-
     if ([self.delegate respondsToSelector:@selector(deviceService:didFailConnectWithError:)])
         dispatch_on_main(^{ [self.delegate deviceService:self didFailConnectWithError:error]; });
 }
