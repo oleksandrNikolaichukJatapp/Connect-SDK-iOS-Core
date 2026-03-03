@@ -57,7 +57,7 @@ NSString* machineName()
 
 @implementation SSDPDiscoveryProvider
 
-static double refreshTime = 10.0;
+static double refreshTime = 5.0;
 static double searchAttemptsBeforeKill = 6.0;
 
 #pragma mark - Setup/creation
