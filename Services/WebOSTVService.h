@@ -114,4 +114,8 @@ typedef void (^ SystemInfoSuccessBlock)(NSArray *featureList);
 - (void)getSystemInfoWithSuccess:(SystemInfoSuccessBlock)success failure:(FailureBlock)failure;
 // @endcond
 
+#pragma mark - Pairing
+
+- (void)sendPairingKey:(NSString *)pairingKey success:(SuccessBlock)success failure:(FailureBlock)failure;
+
 @end

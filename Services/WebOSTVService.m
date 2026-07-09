@@ -42,8 +42,6 @@
     NSMutableDictionary *_webAppSessions;
     NSMutableDictionary *_appToAppIdMappings;
 
-    NSTimer *_pairingTimer;
-
     NSMutableArray *_keyboardQueue;
     BOOL _keyboardQueueProcessing;
 
@@ -324,31 +322,15 @@
     return [DiscoveryManager sharedManager].pairingLevel == DeviceServicePairingLevelOn;
 }
 
-#pragma mark - Paring alert
-
-// UIAlertView methods disabled - deprecated and crashes on UIScene-based apps
-// Use custom delegate (deviceService:pairingFailedWithError:, deviceServicePairingSuccess:) instead
-
--(void) showAlert
-{
-    // Disabled: UIAlertView is deprecated and unavailable for UIScene based applications
-}
-
--(void) showAlertWithTitle:(NSString *)title andMessage:(NSString *)message
-{
-    // Disabled: UIAlertView is deprecated and unavailable for UIScene based applications
-}
-
--(void)dismissPinAlertView
-{
-    // Disabled: UIAlertView is deprecated and unavailable for UIScene based applications
-}
-
 #pragma mark - WebOSTVServiceSocketClientDelegate
 
 - (void) socketWillRegister:(WebOSTVServiceSocketClient *)socket
 {
-    _pairingTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(showAlert) userInfo:nil repeats:NO];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(deviceService:pairingRequiredOfType:withData:)]) {
+        dispatch_on_main(^{
+            [self.delegate deviceService:self pairingRequiredOfType:self.pairingType withData:nil];
+        });
+    }
 }
 
 - (void) socket:(WebOSTVServiceSocketClient *)socket registrationFailed:(NSError *)error
@@ -361,8 +343,6 @@
 
 - (void) socketDidConnect:(WebOSTVServiceSocketClient *)socket
 {
-    [_pairingTimer invalidate];
-
     if ([self.delegate respondsToSelector:@selector(deviceServicePairingSuccess:)])
         dispatch_on_main(^{ [self.delegate deviceServicePairingSuccess:self]; });
 
@@ -1896,18 +1876,15 @@
     __block ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:payload success:^(NSDictionary *responseDict)
                                          {
                                              if([responseDict valueForKey:@"pairingType"]){
-                                                [weakSelf showAlertWithTitle:@"Pin Web App" andMessage:@"Please confirm on your device"];
-                                                 
+                                                 // Web app pinning requires TV-side confirmation
                                              }
                                              else
                                              {
-                                                 [weakSelf dismissPinAlertView];
                                                  [subscription unsubscribe];
                                                  success(responseDict);
                                              }
-                                             
+
                                          }failure:^(NSError *error){
-                                             [weakSelf dismissPinAlertView];
                                              [subscription unsubscribe];
                                              failure(error);
                                          }];
@@ -1931,19 +1908,15 @@
     __block ServiceSubscription *subscription = [self.socket addSubscribe:URL payload:payload success:^(NSDictionary *responseDict)
                                          {
                                              if([responseDict valueForKey:@"pairingType"]){
-                                                [weakSelf showAlertWithTitle:@"Un Pin Web App" andMessage:@"Please confirm on your device"];
-                                                
+                                                 // Web app unpinning requires TV-side confirmation
                                              }
                                              else
                                              {
-                                                 [weakSelf dismissPinAlertView];
                                                  [subscription unsubscribe];
                                                   success(responseDict);
                                              }
-                                             
-                                             
+
                                          }failure:^(NSError *error){
-                                             [weakSelf dismissPinAlertView];
                                              [subscription unsubscribe];
                                              failure(error);
                                          }];
