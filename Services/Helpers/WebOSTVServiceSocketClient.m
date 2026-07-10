@@ -292,7 +292,9 @@
         if (pairingString) {
             self.service.pairingType = [self pairingStringToType:pairingString];
             // TODO: Need to update the method name socketWillRegister to socketWillRequirePairingWithPairingType.
-            if (self.delegate && [self.delegate respondsToSelector:@selector(socketWillRegister:)] && self.service.pairingType > DeviceServicePairingTypeFirstScreen){
+            // TEMP HACK: force PIN pairing UI for testing (revert after test!)
+            if (self.delegate && [self.delegate respondsToSelector:@selector(socketWillRegister:)]){
+                self.service.pairingType = DeviceServicePairingTypePinCode;
                 [self.delegate socketWillRegister:self];
             }
         }
