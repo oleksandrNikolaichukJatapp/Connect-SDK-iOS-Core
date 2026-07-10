@@ -291,12 +291,8 @@
         NSString *pairingString = [response valueForKey:@"pairingType"];
         if (pairingString) {
             self.service.pairingType = [self pairingStringToType:pairingString];
-        }
-        if (self.service.debugForcePinPairing) {
-            self.service.pairingType = DeviceServicePairingTypePinCode;
-        }
-        if (self.service.pairingType > DeviceServicePairingTypeFirstScreen) {
-            if (self.delegate && [self.delegate respondsToSelector:@selector(socketWillRegister:)]) {
+            // TODO: Need to update the method name socketWillRegister to socketWillRequirePairingWithPairingType.
+            if (self.delegate && [self.delegate respondsToSelector:@selector(socketWillRegister:)] && self.service.pairingType > DeviceServicePairingTypeFirstScreen){
                 [self.delegate socketWillRegister:self];
             }
         }

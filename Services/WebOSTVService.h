@@ -118,8 +118,4 @@ typedef void (^ SystemInfoSuccessBlock)(NSArray *featureList);
 
 - (void)sendPairingKey:(NSString *)pairingKey success:(SuccessBlock)success failure:(FailureBlock)failure;
 
-/// Debug-only: force PIN pairing type regardless of TV response.
-/// Set to YES before calling connect() to simulate PIN pairing on PROMPT TVs.
-@property (nonatomic, assign) BOOL debugForcePinPairing;
-
 @end
